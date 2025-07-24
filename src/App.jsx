@@ -4,9 +4,13 @@ import './App.css'
 import Navbar from './Components/Navbar'
 import HotelList from './Components/Hotellist'
 import HotelDetail from './Components/HotelDetail'
-import BookingForm from './Components/Addbookingform'
+import BookingForm from './Components/AddBookingForm'  
 import Payment from './Components/Payment'
 import Footer from './Components/Footer'
+import AddBookingForm from './Components/AddBookingForm';
+
+<Route path="/booking/:roomId" element={<AddBookingForm />} />
+
 
 function App() {
   return (
