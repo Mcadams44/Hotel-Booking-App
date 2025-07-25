@@ -4,17 +4,14 @@ import './App.css'
 import Navbar from './Components/Navbar'
 import HotelList from './Components/Hotellist'
 import HotelDetail from './Components/HotelDetail'
-import BookingForm from './Components/AddBookingForm'  
+import BookingForm from './Components/Addbookingform'
 import Payment from './Components/Payment'
 import Footer from './Components/Footer'
-import AddBookingForm from './Components/AddBookingForm';
-
-<Route path="/booking/:roomId" element={<AddBookingForm />} />
 
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="App">
         <Navbar />
         <div className="main-content">

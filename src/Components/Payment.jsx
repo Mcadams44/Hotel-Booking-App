@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { rooms } from '../data/rooms';
+import { hotels } from '../data/hotels';
+
+
 
 function Payment() {
   const { bookingId } = useParams();
@@ -17,36 +21,23 @@ function Payment() {
   });
 
   useEffect(() => {
-    const fetchBookingData = async () => {
-      try {
-        // Fetch booking details
-        const bookingResponse = await fetch(`http://localhost:3001/bookings/${bookingId}`);
-        const bookingData = await bookingResponse.json();
-        setBooking(bookingData);
-
-        // Fetch room details
-        const roomResponse = await fetch(`http://localhost:3001/rooms/${bookingData.room_id}`);
-        const roomData = await roomResponse.json();
-        setRoom(roomData);
-
-        // Fetch hotel details
-        const hotelResponse = await fetch(`http://localhost:3001/hotels/${roomData.hotel_id}`);
-        const hotelData = await hotelResponse.json();
+    const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+    const bookingData = bookings.find(b => b.id === parseInt(bookingId));
+    
+    if (bookingData) {
+      setBooking(bookingData);
+      setUser(bookingData.user);
+      
+      const roomData = rooms.find(r => r.id === bookingData.room_id);
+      setRoom(roomData);
+      
+      if (roomData) {
+        const hotelData = hotels.find(h => h.id === roomData.hotel_id);
         setHotel(hotelData);
-
-        // Fetch user details
-        const userResponse = await fetch(`http://localhost:3001/users/${bookingData.user_id}`);
-        const userData = await userResponse.json();
-        setUser(userData);
-
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching booking data:', error);
-        setLoading(false);
       }
-    };
-
-    fetchBookingData();
+    }
+    
+    setLoading(false);
   }, [bookingId]);
 
   const handleChange = (e) => {
@@ -57,21 +48,16 @@ function Payment() {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Update booking status to confirmed
-    await fetch(`http://localhost:3001/bookings/${bookingId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        status: 'confirmed'
-      }),
-    });
+    // Update booking status in localStorage
+    const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+    const updatedBookings = bookings.map(b => 
+      b.id === parseInt(bookingId) ? { ...b, status: 'confirmed' } : b
+    );
+    localStorage.setItem('bookings', JSON.stringify(updatedBookings));
     
-    // Show confirmation and redirect to home
     alert('Payment successful! Your booking is confirmed.');
     navigate('/');
   };

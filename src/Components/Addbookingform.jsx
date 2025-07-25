@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { rooms } from '../data/rooms';
+import { hotels } from '../data/hotels';
 
-function AddBookingForm() {
+function BookingForm() {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const [room, setRoom] = useState(null);
@@ -17,26 +19,12 @@ function AddBookingForm() {
   });
 
   useEffect(() => {
-    const fetchRoomData = async () => {
-      try {
-        const roomRes = await fetch(`http://localhost:3001/rooms/${roomId}`);
-        if (!roomRes.ok) throw new Error("Room not found");
-        const roomData = await roomRes.json();
-        setRoom(roomData);
-
-        const hotelRes = await fetch(`http://localhost:3001/hotels/${roomData.hotel_id}`);
-        if (!hotelRes.ok) throw new Error("Hotel not found");
-        const hotelData = await hotelRes.json();
-        setHotel(hotelData);
-
-        setLoading(false);
-      } catch (err) {
-        console.error("Failed to fetch:", err);
-        setLoading(false);
-      }
-    };
-
-    fetchRoomData();
+    const roomData = rooms.find(r => r.id === parseInt(roomId));
+    const hotelData = roomData ? hotels.find(h => h.id === roomData.hotel_id) : null;
+    
+    setRoom(roomData || null);
+    setHotel(hotelData || null);
+    setLoading(false);
   }, [roomId]);
 
   const handleChange = (e) => {
@@ -52,41 +40,30 @@ function AddBookingForm() {
     return nights > 0 ? nights * room.price : 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
-    try {
-      const userRes = await fetch('http://localhost:3001/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone
-        })
-      });
+    const bookingId = Date.now();
+    const booking = {
+      id: bookingId,
+      room_id: parseInt(roomId),
+      check_in: formData.checkIn,
+      check_out: formData.checkOut,
+      guests: parseInt(formData.guests),
+      total_price: calculateTotalPrice(),
+      status: 'pending',
+      user: {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone
+      }
+    };
 
-      const userData = await userRes.json();
+    const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+    existingBookings.push(booking);
+    localStorage.setItem('bookings', JSON.stringify(existingBookings));
 
-      const bookingRes = await fetch('http://localhost:3001/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: userData.id,
-          room_id: parseInt(roomId),
-          check_in: formData.checkIn,
-          check_out: formData.checkOut,
-          guests: parseInt(formData.guests),
-          total_price: calculateTotalPrice(),
-          status: 'pending'
-        })
-      });
-
-      const bookingData = await bookingRes.json();
-      navigate(`/payment/${bookingData.id}`);
-    } catch (err) {
-      console.error("Booking failed:", err);
-    }
+    navigate(`/payment/${bookingId}`);
   };
 
   if (loading) return <div>⏳ Loading booking form...</div>;
@@ -183,4 +160,4 @@ function AddBookingForm() {
   );
 }
 
-export default AddBookingForm;
+export default BookingForm;
