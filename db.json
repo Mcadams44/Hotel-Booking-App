@@ -268,6 +268,16 @@
       "total_price": 64400,
       "status": "pending",
       "id": 3
+    },
+    {
+      "user_id": 4,
+      "room_id": 1,
+      "check_in": "2025-08-12",
+      "check_out": "2025-12-25",
+      "guests": 2,
+      "total_price": 47250,
+      "status": "pending",
+      "id": 4
     }
   ],
   "users": [
@@ -288,6 +298,12 @@
       "email": "kinarakabro@gmail.com",
       "phone": "0193657253",
       "id": 3
+    },
+    {
+      "name": "Tupac",
+      "email": "wandegwa@gmail.com",
+      "phone": "0749324225",
+      "id": 4
     }
   ]
 }
