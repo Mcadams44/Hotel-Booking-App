@@ -1,8 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { hotels as hotelData } from '../data/hotels';
-import { rooms as roomData } from '../data/rooms';
-import { reviews as reviewData } from '../data/reviews';
 
 function HotelDetail() {
   const { id } = useParams();
@@ -12,22 +9,28 @@ function HotelDetail() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Convert id from string to number for comparison
-    const hotelId = parseInt(id);
-    
-    // Get hotel details from static data
-    const foundHotel = hotelData.find(h => h.id === hotelId);
-    setHotel(foundHotel);
-    
-    // Get rooms for this hotel from static data
-    const hotelRooms = roomData.filter(room => room.hotel_id === hotelId);
-    setRooms(hotelRooms);
-    
-    // Get reviews for this hotel from static data
-    const hotelReviews = reviewData.filter(review => review.hotel_id === hotelId);
-    setReviews(hotelReviews);
-    
-    setLoading(false);
+    const fetchHotelData = async () => {
+      try {
+        const hotelResponse = await fetch(`http://localhost:3001/hotels/${id}`);
+        const hotelData = await hotelResponse.json();
+        setHotel(hotelData);
+
+        const roomsResponse = await fetch(`http://localhost:3001/rooms?hotel_id=${id}`);
+        const roomsData = await roomsResponse.json();
+        setRooms(roomsData);
+
+        const reviewsResponse = await fetch(`http://localhost:3001/reviews?hotel_id=${id}`);
+        const reviewsData = await reviewsResponse.json();
+        setReviews(reviewsData);
+
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching hotel data:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchHotelData();
   }, [id]);
 
   if (loading) {

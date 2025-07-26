@@ -1,10 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { rooms as roomData } from '../data/rooms';
-import { hotels as hotelData } from '../data/hotels';
-import { getStorageData, updateStorageItem } from '../utils/localStorage';
-import { users as initialUsers } from '../data/users';
-import { bookings as initialBookings } from '../data/bookings';
 
 function Payment() {
   const { bookingId } = useParams();
@@ -22,32 +17,32 @@ function Payment() {
   });
 
   useEffect(() => {
-    // Convert bookingId from string to number
-    const bookingIdNum = parseInt(bookingId);
-    
-    // Get booking from localStorage
-    const bookings = getStorageData('bookings', initialBookings);
-    const foundBooking = bookings.find(b => b.id === bookingIdNum);
-    setBooking(foundBooking);
-    
-    if (foundBooking) {
-      // Find room from static data
-      const foundRoom = roomData.find(r => r.id === foundBooking.room_id);
-      setRoom(foundRoom);
-      
-      if (foundRoom) {
-        // Find hotel from static data
-        const foundHotel = hotelData.find(h => h.id === foundRoom.hotel_id);
-        setHotel(foundHotel);
+    const fetchBookingData = async () => {
+      try {
+        const bookingResponse = await fetch(`http://localhost:3001/bookings/${bookingId}`);
+        const bookingData = await bookingResponse.json();
+        setBooking(bookingData);
+
+        const roomResponse = await fetch(`http://localhost:3001/rooms/${bookingData.room_id}`);
+        const roomData = await roomResponse.json();
+        setRoom(roomData);
+
+        const hotelResponse = await fetch(`http://localhost:3001/hotels/${roomData.hotel_id}`);
+        const hotelData = await hotelResponse.json();
+        setHotel(hotelData);
+
+        const userResponse = await fetch(`http://localhost:3001/users/${bookingData.user_id}`);
+        const userData = await userResponse.json();
+        setUser(userData);
+
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching booking data:', error);
+        setLoading(false);
       }
-      
-      // Get user from localStorage
-      const users = getStorageData('users', initialUsers);
-      const foundUser = users.find(u => u.id === foundBooking.user_id);
-      setUser(foundUser);
-    }
-    
-    setLoading(false);
+    };
+
+    fetchBookingData();
   }, [bookingId]);
 
   const handleChange = (e) => {
@@ -58,14 +53,19 @@ function Payment() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Update booking status to confirmed using localStorage
-    const bookingIdNum = parseInt(bookingId);
-    updateStorageItem('bookings', bookingIdNum, { status: 'confirmed' }, initialBookings);
+    await fetch(`http://localhost:3001/bookings/${bookingId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        status: 'confirmed'
+      }),
+    });
     
-    // Show confirmation and redirect to home
     alert('Payment successful! Your booking is confirmed.');
     navigate('/');
   };
