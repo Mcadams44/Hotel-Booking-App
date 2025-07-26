@@ -12,16 +12,14 @@ function HotelDetail() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
     const hotelId = parseInt(id);
-    
     
     const foundHotel = hotelData.find(h => h.id === hotelId);
     setHotel(foundHotel);
     
     const hotelRooms = roomData.filter(room => room.hotel_id === hotelId);
     setRooms(hotelRooms);
-
+    
     const hotelReviews = reviewData.filter(review => review.hotel_id === hotelId);
     setReviews(hotelReviews);
     
